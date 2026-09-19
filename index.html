@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parivaan on Firedancer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#f0f3f7; --panel:#e3e9f1; --sunk:#d7dfe9; --ink:#0f1c2b;
+  --ink2:#44586f; --ink3:#7889a0; --rule:#ccd6e2; --rail:#b6c3d2;
+  --cool:#1c7d9c; --warm:#b3731c; --loss:#b04a3a; --spark:#0d566e;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ground:#0a1420; --panel:#13202e; --sunk:#0d1926; --ink:#e7eef7;
+  --ink2:#9db2c8; --ink3:#5f7490; --rule:#20303f; --rail:#2a3d4f;
+  --cool:#4fbfe0; --warm:#e8a54a; --loss:#e2705c; --spark:#7fd8f5;
+}}
+:root[data-theme="dark"]{
+  --ground:#0a1420; --panel:#13202e; --sunk:#0d1926; --ink:#e7eef7;
+  --ink2:#9db2c8; --ink3:#5f7490; --rule:#20303f; --rail:#2a3d4f;
+  --cool:#4fbfe0; --warm:#e8a54a; --loss:#e2705c; --spark:#7fd8f5;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1200px;margin:0 auto;padding:44px 26px 80px}
+section{margin-top:58px}
+h2{font-size:15px;font-weight:600;margin:0}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+  padding-bottom:9px;border-bottom:1px solid var(--rule);margin-bottom:20px}
+.head p{margin:0;color:var(--ink3);font-size:12.5px;text-align:right}
+p.lede{color:var(--ink2);max-width:68ch;margin:0 0 18px;font-size:14.5px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:36px;align-items:end;
+  padding-bottom:24px;border-bottom:1px solid var(--rule)}
+h1{margin:0 0 6px;font-size:21px;font-weight:600;letter-spacing:-.01em}
+.hero p{margin:0;color:var(--ink2);max-width:58ch;font-size:14.5px}
+.big{text-align:right;line-height:.92}
+.big .n{font-family:"IBM Plex Mono",monospace;font-size:clamp(52px,10vw,96px);
+  font-weight:500;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.big .u{font-size:.32em;color:var(--ink2);margin-left:.12em;letter-spacing:0}
+.big .c{color:var(--ink2);font-size:13px;margin-top:10px;line-height:1.4}
+
+.strip{display:flex;flex-wrap:wrap;margin:22px 0 0;padding:0;list-style:none;
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.strip li{flex:1 1 128px;padding:11px 14px;border-right:1px solid var(--rule);min-width:0}
+.strip li:last-child{border-right:0}
+.strip b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:16px;
+  font-variant-numeric:tabular-nums}
+.strip span{color:var(--ink3);font-size:12px}
+
+.scroll{overflow-x:auto;padding:4px;margin:0 -4px}
+svg{display:block;width:100%;height:auto}
+text{font-family:"IBM Plex Sans",sans-serif}
+.t-mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* pipeline */
+#pipe{min-width:880px}
+.stg{cursor:pointer}
+.stg rect{transition:opacity .16s}
+.dim{opacity:.24}
+.s-nm{font-size:12px;font-weight:500;fill:var(--ink)}
+.s-sb{font-size:10px;fill:var(--ink3)}
+.s-us{font-size:12.5px;font-weight:500}
+.cap{font-size:11px;fill:var(--ink2)}
+
+/* trace */
+#trace{min-width:900px}
+.ln-lbl{font-size:11px;fill:var(--ink2)}
+.ln-grp{font-size:10.5px;fill:var(--ink3);font-weight:500}
+.sp-lbl{font-size:10px;fill:var(--ink);font-weight:500}
+.tick{font-size:10px;fill:var(--ink3)}
+
+/* detail */
+.detail{margin-top:20px;padding:16px 19px;background:var(--panel);border-radius:4px;
+  border-left:3px solid var(--rail);min-height:88px}
+.detail h3{margin:0 0 3px;font-size:14.5px;font-weight:600}
+.detail .m{margin:0 0 9px;color:var(--ink3);font-size:12px;
+  font-family:"IBM Plex Mono",monospace}
+.detail p{margin:0;color:var(--ink2);font-size:13.5px;max-width:74ch}
+
+/* controls */
+.ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px}
+button{font:inherit;font-size:12.5px;padding:6px 14px;border-radius:3px;
+  border:1px solid var(--rail);background:none;color:var(--ink);cursor:pointer}
+button:hover{background:var(--panel)}
+button:focus-visible{outline:2px solid var(--spark);outline-offset:1px}
+.rng{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2)}
+input[type=range]{width:130px;accent-color:var(--spark)}
+.ratio{margin-left:auto;color:var(--ink3);font-size:12px;
+  font-family:"IBM Plex Mono",monospace}
+
+/* topology */
+#topo{min-width:960px}
+.tl-box{fill:var(--panel);stroke:var(--rule)}
+.tl-nm{font-size:11.5px;font-weight:500;fill:var(--ink)}
+.tl-sb{font-size:9.5px;fill:var(--ink3)}
+.tl-grp{fill:none;stroke:var(--rail);stroke-dasharray:3 3}
+.tl-gl{font-size:10.5px;fill:var(--ink3);font-weight:500}
+.wire{stroke:var(--rail);stroke-width:1.3;fill:none}
+.wire-d{stroke:var(--rail);stroke-width:1.1;fill:none;stroke-dasharray:4 4;opacity:.7}
+
+/* bottleneck */
+.race{display:grid;gap:14px;margin-top:6px}
+.rrow{display:grid;grid-template-columns:minmax(116px,180px) minmax(0,1fr) 92px;
+  gap:14px;align-items:center}
+.rrow .k{font-size:13px;color:var(--ink2)}
+.rtrack{position:relative;height:22px;background:var(--sunk);border-radius:2px;overflow:hidden}
+.rbar{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.rval{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;color:var(--ink2)}
+.sliver{position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cool)}
+
+table{border-collapse:collapse;width:100%;margin-top:22px;font-size:13px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--rule)}
+th{color:var(--ink3);font-weight:500;font-size:12px}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.lossy{color:var(--loss)}
+
+.finding{margin-top:26px;padding:18px 20px;border-left:3px solid var(--loss);
+  background:var(--panel);border-radius:4px}
+.finding p{margin:0;color:var(--ink2);font-size:13.5px;max-width:76ch}
+.finding p+p{margin-top:9px}
+.finding strong{color:var(--ink);font-weight:600}
+
+footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--rule);
+  color:var(--ink3);font-size:12px}
+
+@media (max-width:680px){
+  .wrap{padding:28px 16px 56px}
+  .hero{grid-template-columns:1fr;gap:20px;align-items:start}
+  .big{text-align:left}
+  .head{flex-direction:column;gap:4px}
+  .head p{text-align:left}
+  .rrow{grid-template-columns:minmax(88px,1fr) minmax(0,1.3fr) 72px;gap:9px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div>
+    <h1>Parivaan on Firedancer</h1>
+    <p>A Solana arbitrage engine compiled in-tree as a native Firedancer tile.
+      Shredstream-only observer — no consensus, no voting, no replay. Two detection
+      paths converge on one submission path.</p>
+  </div>
+  <div class="big">
+    <div class="n">111<span class="u">µs</span></div>
+    <div class="c">serial hot path<br>shred consumed → signed TX on the wire</div>
+  </div>
+</div>
+
+<ul class="strip">
+  <li><b>~14K/s</b><span>shreds ingested</span></li>
+  <li><b>3.14M</b><span>pool slots, 264 MB</span></li>
+  <li><b>15</b><span>DEX programs</span></li>
+  <li><b>2–6</b><span>hop routes</span></li>
+  <li><b>11→18</b><span>tiles, minimal topo</span></li>
+  <li><b>EWR · AMS</b><span>bare metal</span></li>
+</ul>
+
+<!-- ───────────── hot path ───────────── -->
+<section>
+  <div class="head">
+    <h2>Serial hot path</h2>
+    <p>box width ∝ time · colour = cost · hover a stage</p>
+  </div>
+  <p class="lede">Every stage between a FEC arriving in the mev tile and a signed transaction
+    leaving over QUIC. Particles dwell in proportion to cost, so the parse stage visibly
+    congests — it owns 45% of the budget on its own.</p>
+  <div class="scroll"><svg id="pipe" viewBox="0 0 1140 226" role="img"
+    aria-label="Animated six-stage pipeline; particles bunch in the 50-microsecond pool feed parse stage."></svg></div>
+  <div class="detail" id="det" aria-live="polite"></div>
+  <div class="ctl">
+    <button id="play">Pause</button>
+    <div class="rng"><label for="spd">Playback</label>
+      <input type="range" id="spd" min=".2" max="3" step=".05" value="1"></div>
+    <span class="ratio" id="ratio"></span>
+  </div>
+</section>
+
+<!-- ───────────── concurrency ───────────── -->
+<section>
+  <div class="head">
+    <h2>What runs in parallel</h2>
+    <p>single FEC · microseconds · playhead sweeps the 111 µs window</p>
+  </div>
+  <p class="lede">Only the main thread is serial. The mevin ingest tile, the DFS cycle worker
+    and the Phase 3b BPF shadow executor all overlap it. BPF runs 70–300 µs and commits about
+    15% of executed transactions — it corrects state after the fire rather than gating it, which
+    is why it sits off the critical path entirely.</p>
+  <div class="scroll"><svg id="trace" viewBox="0 0 1140 300" role="img"
+    aria-label="Four-lane concurrency trace showing main thread, mevin tile, DFS worker and BPF worker overlapping."></svg></div>
+</section>
+
+<!-- ───────────── topology ───────────── -->
+<section>
+  <div class="head">
+    <h2>System topology</h2>
+    <p>minimal observer build · replay, repair, tower, txsend, gossip removed</p>
+  </div>
+  <p class="lede">Firedancer is reduced to a network stack and a frozen account database.
+    The mev tile absorbs the responsibilities the removed tiles used to hold: fd_store eviction,
+    cold-path bootstrap, and peer plus leader discovery through an in-tile HTTPS worker that
+    replaced gossip entirely.</p>
+  <div class="scroll"><svg id="topo" viewBox="0 0 1140 430" role="img"
+    aria-label="System topology from Jito ShredStream through the Firedancer tile mesh to the leader QUIC queue."></svg></div>
+</section>
+
+<!-- ───────────── bottleneck ───────────── -->
+<section>
+  <div class="head">
+    <h2>Where it was actually lost</h2>
+    <p>same scale · microseconds</p>
+  </div>
+  <p class="lede">The entire code path is a rounding error against the thing that decided the
+    outcome. A Solana slot is 400 ms. Arriving one slot late means the spread is already gone,
+    no matter how fast the engine was.</p>
+
+  <div class="race">
+    <div class="rrow">
+      <span class="k">Serial hot path</span>
+      <span class="rtrack"><span class="sliver" id="sliver"></span></span>
+      <span class="rval">111 µs</span>
+    </div>
+    <div class="rrow">
+      <span class="k">QUIC transit to leader</span>
+      <span class="rtrack"><span class="rbar" id="b-transit"></span></span>
+      <span class="rval">5–50 ms</span>
+    </div>
+    <div class="rrow">
+      <span class="k">One slot late</span>
+      <span class="rtrack"><span class="rbar" id="b-slot"></span></span>
+      <span class="rval">400 ms</span>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Measured on 5 landed signatures</th><th>Parivaan</th><th>Same-pool winners</th></tr></thead>
+    <tbody>
+      <tr><td>Detection to fire</td><td class="n">36–120 µs</td><td class="n">comparable</td></tr>
+      <tr><td>Pool state freshness</td><td>shred-time, current</td><td>shred-time, current</td></tr>
+      <tr><td>Swap instruction</td><td>correct</td><td>correct</td></tr>
+      <tr><td>Priority fee paid</td><td class="n">25,000 lamports</td><td class="n">7–14K lamports</td></tr>
+      <tr><td>Slot arrival</td><td class="n lossy">+1 to +2</td><td class="n">+0</td></tr>
+      <tr><td>QUIC QoS class</td><td class="lossy">unstaked</td><td>staked relayer</td></tr>
+    </tbody>
+  </table>
+
+  <div class="finding">
+    <p><strong>The engine was not the constraint.</strong> On-chain forensics across the landed
+      signatures showed pool state on par with mainnet — the same shred stream reaches the engine
+      and the leader at the same time — and every swap instruction reaching the DEX correctly.
+      All five errored <span class="mono">Custom:3005</span>, DEX slippage, because the price had
+      already moved.</p>
+    <p>Competitors landed one to two slots earlier while paying a quarter of the priority fee.
+      Stake-weighted queue position at the leader's QUIC endpoint is worth more than fee bidding
+      at unstaked rates. That is a submission-side gap, not an ingestion-side one, and no amount
+      of microsecond optimisation above it changes the result.</p>
+  </div>
+</section>
+
+<footer>
+  Figures from ARCHITECTURE.md and LATENCY.md, 2026-05-07 revision. Serial breakdown taken from
+  the measured single-FEC pipeline trace.
+</footer>
+
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const cv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const hx=h=>{h=h.replace("#","");return[0,2,4].map(i=>parseInt(h.substr(i,2),16))};
+function mk(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e}
+
+/* ═══ stage data — measured single-FEC trace ═══ */
+const ST=[
+ {nm:"after_frag + evict", sb:"FEC consume", us:5,
+  d:"Consumes the FEC frag and calls fd_store_remove inline on the merkle root. In a normal validator the replay tile does this eviction; with replay removed the mev tile owns it, which closed a five-hour pool-exhaustion crash cycle."},
+ {nm:"pool_feed parse", sb:"sa_pool_feed_scan_entries", us:50,
+  d:"Parses the transaction wire format straight out of the shred and applies constant-product swap deltas to g_pool_store. The single most expensive stage at 45% of the budget, and the reason state stays current to the active slot without any replay round-trip."},
+ {nm:"SPFA cycle scan", sb:"adjacency + Tarjan SCC", us:10,
+  d:"Budget-capped shortest-path-faster-algorithm scan across the token adjacency graph for 2 to 6 hop cycles. Tuning on 2026-05-09 cut p50 from 3.9 ms to 7.7 µs and p99 from 68 ms to 33 µs."},
+ {nm:"fire_helper gate", sb:"profit + region", us:5,
+  d:"Closed-loop floor of 10,000 lamports, cross-base floor of $0.02 USDC, plus cache-age and hop-count guards. The EWR region gate rejects any leader outside the region, cutting fire volume roughly 25× so every remaining fire has a realistic sub-15 ms transit budget."},
+ {nm:"router_tx build + sign", sb:"v0 + 4 ALTs + ed25519", us:36,
+  d:"Builds the N-hop router CPI as a v0 versioned transaction with up to four address lookup tables, then signs from a 32-nonce presign pool at roughly 6 µs per signature."},
+ {nm:"fd_quic stream send", sb:"TPU fanout", us:5,
+  d:"Opens a QUIC stream to each of the next leaders, deduplicated by pubkey, from 32 pre-warmed connections held seven rotations ahead. Peer and leader tables come from the in-tile dRPC worker rather than gossip."}
+];
+const TOT=ST.reduce((a,s)=>a+s.us,0), MX=Math.max(...ST.map(s=>s.us)), MN=Math.min(...ST.map(s=>s.us));
+const heat=us=>{const t=(us-MN)/(MX-MN||1),a=hx(cv("--cool")),b=hx(cv("--warm"));
+  return`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(",")})`};
+
+/* ═══ pipeline ═══ */
+const PW=1140,PAD=58,TY=84,BH=52;
+let geo=[];
+function layout(){
+  const usable=PW-PAD*2, gaps=6*(ST.length-1);
+  let x=PAD,cum=0;
+  geo=ST.map((s,i)=>{
+    const w=(s.us/TOT)*(usable-gaps);
+    const g={...s,i,x,w,cx:x+w/2,t0:cum,t1:cum+s.us,c:heat(s.us)};
+    x+=w+6;cum+=s.us;return g;
+  });
+}
+function drawPipe(){
+  layout();
+  const s=document.getElementById("pipe");s.innerHTML="";
+  s.appendChild(mk("line",{x1:PAD-30,y1:TY+BH/2,x2:PW-PAD+30,y2:TY+BH/2,
+    stroke:cv("--rail"),"stroke-width":1.4}));
+  let e=mk("text",{x:PAD-34,y:TY+BH/2+4,"text-anchor":"end",class:"cap"});
+  e.textContent="FEC in";s.appendChild(e);
+  e=mk("text",{x:PW-PAD+34,y:TY+BH/2+4,class:"cap"});e.textContent="signed TX";s.appendChild(e);
+
+  geo.forEach(g=>{
+    const G=mk("g",{class:"stg",tabindex:"0",role:"button",
+      "aria-label":`${g.nm}, ${g.us} microseconds`});
+    G.dataset.i=g.i;
+    G.appendChild(mk("rect",{x:g.x,y:TY,width:g.w,height:BH,rx:3,fill:g.c,opacity:.15}));
+    G.appendChild(mk("rect",{x:g.x,y:TY,width:g.w,height:2.5,rx:1.2,fill:g.c}));
+    let t=mk("text",{x:g.cx,y:TY-13,"text-anchor":"middle",class:"s-us t-mono",fill:g.c});
+    t.textContent=g.us+" µs";G.appendChild(t);
+    t=mk("text",{x:g.cx,y:TY+BH+20,"text-anchor":"middle",class:"s-nm"});
+    t.textContent=g.nm;G.appendChild(t);
+    t=mk("text",{x:g.cx,y:TY+BH+34,"text-anchor":"middle",class:"s-sb"});
+    t.textContent=g.sb;G.appendChild(t);
+    const pick=()=>sel(g.i);
+    G.addEventListener("mouseenter",pick);G.addEventListener("focus",pick);
+    G.addEventListener("click",()=>sel(g.i,1));
+    s.appendChild(G);
+  });
+  s.appendChild(mk("g",{id:"dots"}));
+}
+let pin=null;
+function sel(i,p){
+  if(p)pin=pin===i?null:i;
+  const g=geo[i],d=document.getElementById("det");
+  d.style.borderLeftColor=g.c;
+  d.innerHTML=`<h3>${g.nm}</h3><p class="m">${g.us} µs · ${(g.us/TOT*100).toFixed(0)}% of path · cumulative ${g.t1} µs</p><p>${g.d}</p>`;
+  document.querySelectorAll("#pipe .stg").forEach(n=>n.classList.toggle("dim",+n.dataset.i!==i));
+}
+
+/* ═══ concurrency trace ═══ */
+const LANES=[
+ {grp:"Main thread — mev:0",serial:1,sp:[
+   {t0:0,t1:5,l:"after_frag + evict"},
+   {t0:5,t1:55,l:"pool_feed parse"},
+   {t0:55,t1:65,l:"SPFA cycle scan"},
+   {t0:65,t1:70,l:"fire gate"},
+   {t0:70,t1:106,l:"router_tx build + sign"},
+   {t0:106,t1:111,l:"QUIC send"}]},
+ {grp:"mevin tile",sp:[
+   {t0:5,t1:65,l:"parse + ALT resolve"},
+   {t0:65,t1:67,l:"publish"}]},
+ {grp:"DFS worker — pthread",sp:[
+   {t0:55,t1:63,l:"pop seed + DFS expand"},
+   {t0:63,t1:64,l:"push results"}]},
+ {grp:"BPF Phase 3b worker",sp:[
+   {t0:55,t1:130,l:"fd_runtime full exec — 70–300 µs, ~15% commit",clip:1}]}
+];
+const TW=1140,TL=176,TR=1096,TMAX=135,LH=52,TTOP=44;
+const tx=u=>TL+(u/TMAX)*(TR-TL);
+function drawTrace(){
+  const s=document.getElementById("trace");s.innerHTML="";
+  // grid
+  for(let u=0;u<=135;u+=15){
+    s.appendChild(mk("line",{x1:tx(u),y1:TTOP-14,x2:tx(u),y2:TTOP+LANES.length*LH-8,
+      stroke:cv("--rule"),"stroke-width":1}));
+    const t=mk("text",{x:tx(u),y:TTOP-20,"text-anchor":"middle",class:"tick t-mono"});
+    t.textContent=u;s.appendChild(t);
+  }
+  const t=mk("text",{x:TL,y:TTOP-38,class:"tick"});t.textContent="µs";s.appendChild(t);
+  // 111 marker
+  s.appendChild(mk("line",{x1:tx(111),y1:TTOP-14,x2:tx(111),y2:TTOP+LANES.length*LH-8,
+    stroke:cv("--warm"),"stroke-width":1.4,"stroke-dasharray":"4 3"}));
+  const m=mk("text",{x:tx(111)+6,y:TTOP+LANES.length*LH+8,class:"tick t-mono",fill:cv("--warm")});
+  m.textContent="111 µs — TX on wire";s.appendChild(m);
+
+  LANES.forEach((ln,li)=>{
+    const y=TTOP+li*LH;
+    const g=mk("text",{x:TL-14,y:y+15,"text-anchor":"end",class:"ln-grp"});
+    g.textContent=ln.grp;s.appendChild(g);
+    if(ln.serial){const n=mk("text",{x:TL-14,y:y+28,"text-anchor":"end",class:"ln-lbl"});
+      n.textContent="serial · critical path";s.appendChild(n)}
+    ln.sp.forEach(sp=>{
+      const x0=tx(sp.t0),w=Math.max(tx(sp.t1)-x0,3);
+      const c=ln.serial?heat(sp.t1-sp.t0>40?MX:sp.t1-sp.t0):cv("--rail");
+      s.appendChild(mk("rect",{x:x0,y:y,width:w,height:21,rx:2.5,
+        fill:ln.serial?c:cv("--panel"),stroke:ln.serial?"none":cv("--rail"),
+        opacity:ln.serial?.55:1}));
+      if(w>58){const t=mk("text",{x:x0+7,y:y+15,class:"sp-lbl"});
+        t.textContent=sp.l;s.appendChild(t)}
+      if(sp.clip){
+        s.appendChild(mk("path",{d:`M${tx(130)} ${y} l10 10 l-10 11`,fill:"none",
+          stroke:cv("--ink3"),"stroke-width":1.2}));
+        const t=mk("text",{x:x0+7,y:y+15,class:"sp-lbl",fill:cv("--ink2")});
+        t.textContent=sp.l;s.appendChild(t);
+      }
+    });
+    if(!ln.serial&&ln.sp[0].t0>0){
+      const lab=mk("text",{x:tx(ln.sp[0].t0)+4,y:y+34,class:"tick"});
+      lab.textContent="off critical path";s.appendChild(lab);
+    }
+  });
+  s.appendChild(mk("line",{id:"head",x1:tx(0),y1:TTOP-14,x2:tx(0),y2:TTOP+LANES.length*LH-8,
+    stroke:cv("--spark"),"stroke-width":1.6}));
+}
+
+/* ═══ topology ═══ */
+const NODES=[
+ {id:"ss",x:24,y:30,w:150,h:44,n:"Jito ShredStream",s:"Amsterdam · UDP :8003"},
+ {id:"drpc",x:24,y:96,w:150,h:44,n:"dRPC HTTPS",s:"peers + leader schedule"},
+ {id:"sock",x:224,y:30,w:104,h:44,n:"sock ×3",s:"SO_REUSEPORT"},
+ {id:"shred",x:224,y:96,w:104,h:44,n:"shred ×10",s:"FEC + merkle"},
+ {id:"mevin",x:378,y:30,w:122,h:44,n:"mevin tile",s:"parse + ALT"},
+ {id:"accdb",x:378,y:96,w:122,h:44,n:"accdb",s:"frozen at snapshot"},
+ // mev internals
+ {id:"pf",x:566,y:44,w:126,h:40,n:"pool_feed",s:"delta apply"},
+ {id:"ps",x:566,y:100,w:126,h:40,n:"g_pool_store",s:"3.14M · 264 MB"},
+ {id:"dfs",x:566,y:156,w:126,h:40,n:"DFS worker",s:"SPFA + SCC"},
+ {id:"bpf",x:566,y:212,w:126,h:40,n:"BPF Phase 3b",s:"~15% commit"},
+ {id:"fire",x:734,y:72,w:120,h:40,n:"fire_helper",s:"profit + region"},
+ {id:"txb",x:734,y:128,w:120,h:40,n:"router_tx",s:"v0 + 4 ALTs"},
+ {id:"rpcw",x:734,y:212,w:120,h:40,n:"dRPC worker",s:"in-tile pthread"},
+ {id:"sign",x:734,y:16,w:120,h:40,n:"sign tile",s:"keyguard"},
+ {id:"quic",x:900,y:100,w:118,h:44,n:"fd_quic",s:"next-7 leaders"},
+ {id:"ldr",x:900,y:186,w:118,h:52,n:"Leader TPU",s:"unstaked QoS",hot:1}
+];
+const EDGES=[
+ ["ss","sock"],["sock","shred"],["shred","mevin"],["shred","pf"],["mevin","pf"],
+ ["pf","ps"],["ps","dfs"],["pf","bpf"],["bpf","ps"],["dfs","fire"],["fire","txb"],
+ ["txb","quic"],["quic","ldr"],["sign","txb"],["drpc","rpcw"],["rpcw","quic"],
+ ["accdb","pf"]
+];
+const FLOW=["ss","sock","shred","pf","ps","dfs","fire","txb","quic","ldr"];
+const N=id=>NODES.find(n=>n.id===id);
+function drawTopo(){
+  const s=document.getElementById("topo");s.innerHTML="";
+  const off=90;
+  // mev:0 group box
+  s.appendChild(mk("rect",{x:548,y:off+2,width:322,height:258,rx:5,class:"tl-grp"}));
+  let g=mk("text",{x:552,y:off-6,class:"tl-gl"});g.textContent="mev:0 tile";s.appendChild(g);
+  g=mk("text",{x:224,y:off-6,class:"tl-gl"});g.textContent="Firedancer — minimal topology";s.appendChild(g);
+  g=mk("text",{x:24,y:off-6,class:"tl-gl"});g.textContent="Upstream";s.appendChild(g);
+  g=mk("text",{x:900,y:off-6,class:"tl-gl"});g.textContent="Submission";s.appendChild(g);
+
+  EDGES.forEach(([a,b])=>{
+    const A=N(a),B=N(b);
+    const x1=A.x+A.w,y1=off+A.y+A.h/2,x2=B.x,y2=off+B.y+B.h/2;
+    const dash=(a==="accdb"||a==="sign"||a==="bpf");
+    const mid=(x1+x2)/2;
+    s.appendChild(mk("path",{d:`M${x1} ${y1} C${mid} ${y1} ${mid} ${y2} ${x2} ${y2}`,
+      class:dash?"wire-d":"wire"}));
+  });
+  NODES.forEach(n=>{
+    const G=mk("g",{});
+    G.appendChild(mk("rect",{x:n.x,y:off+n.y,width:n.w,height:n.h,rx:3,
+      class:"tl-box","stroke-width":n.hot?1.6:1,
+      ...(n.hot?{stroke:cv("--loss")}:{})}));
+    let t=mk("text",{x:n.x+10,y:off+n.y+19,class:"tl-nm"});t.textContent=n.n;G.appendChild(t);
+    t=mk("text",{x:n.x+10,y:off+n.y+33,class:"tl-sb"});t.textContent=n.s;G.appendChild(t);
+    s.appendChild(G);
+  });
+  s.appendChild(mk("g",{id:"tdots"}));
+  const note=mk("text",{x:24,y:off+300,class:"tl-sb"});
+  note.textContent="Removed: replay · repair · tower · txsend · execrp×8 · ipecho · genesi · gossip · gossvf";
+  s.appendChild(note);
+  const note2=mk("text",{x:24,y:off+316,class:"tl-sb"});
+  note2.textContent="Dashed = frozen read, keyguard, or writeback path";
+  s.appendChild(note2);
+}
+
+/* ═══ animation ═══ */
+const BASE=4200;
+let parts=[],tparts=[],play=1,spd=1,last=0,sp1=0,sp2=0,sweep=0;
+const xAt=t=>{for(const g of geo)if(t<=g.t1)return g.x+((t-g.t0)/g.us)*g.w;return PW-PAD};
+const cAt=t=>{for(const g of geo)if(t<=g.t1)return g.c;return geo[geo.length-1].c};
+function frame(now){
+  if(!last)last=now;
+  const dt=Math.min(now-last,60);last=now;
+  if(play){
+    const adv=(dt/BASE)*spd*TOT;
+    sp1+=dt*spd; if(sp1>330){sp1=0;parts.push({t:0})}
+    parts.forEach(p=>p.t+=adv); parts=parts.filter(p=>p.t<=TOT);
+    sweep+=(dt/BASE)*spd*TMAX; if(sweep>TMAX)sweep=0;
+    sp2+=dt*spd; if(sp2>520){sp2=0;tparts.push({i:0,p:0})}
+    tparts.forEach(q=>q.p+=(dt/900)*spd);
+    tparts.forEach(q=>{while(q.p>=1&&q.i<FLOW.length-2){q.p-=1;q.i++}});
+    tparts=tparts.filter(q=>!(q.i>=FLOW.length-2&&q.p>=1));
+  }
+  const L=document.getElementById("dots");
+  if(L){L.innerHTML="";parts.forEach(p=>{
+    L.appendChild(mk("circle",{cx:xAt(p.t).toFixed(1),cy:TY+BH/2,r:3.4,fill:cAt(p.t),opacity:.95}))})}
+  const H=document.getElementById("head");
+  if(H){H.setAttribute("x1",tx(sweep));H.setAttribute("x2",tx(sweep))}
+  const T=document.getElementById("tdots");
+  if(T){T.innerHTML="";tparts.forEach(q=>{
+    const A=N(FLOW[q.i]),B=N(FLOW[q.i+1]);if(!A||!B)return;
+    const x1=A.x+A.w,y1=90+A.y+A.h/2,x2=B.x,y2=90+B.y+B.h/2;
+    const e=Math.min(q.p,1);
+    T.appendChild(mk("circle",{cx:(x1+(x2-x1)*e).toFixed(1),
+      cy:(y1+(y2-y1)*e).toFixed(1),r:3,fill:cv("--spark"),opacity:.9}))})}
+  requestAnimationFrame(frame);
+}
+
+/* ═══ controls + boot ═══ */
+const btn=document.getElementById("play");
+btn.onclick=()=>{play=!play;btn.textContent=play?"Pause":"Play"};
+const rng=document.getElementById("spd");
+rng.oninput=()=>{spd=+rng.value;ratio()};
+function ratio(){
+  document.getElementById("ratio").textContent=
+    "1 : "+Math.round((BASE/spd)/(TOT/1000)).toLocaleString()+" slower than real time";
+}
+function bars(){
+  // 400 ms reference = full width
+  document.getElementById("b-slot").style.width="100%";
+  document.getElementById("b-slot").style.background=cv("--loss");
+  const t=document.getElementById("b-transit");
+  t.style.width=(50/400*100)+"%"; t.style.background=cv("--warm");
+  document.getElementById("sliver").style.background=cv("--cool");
+}
+function boot(){drawPipe();drawTrace();drawTopo();bars();ratio();sel(1)}
+boot();
+if(matchMedia("(prefers-reduced-motion: reduce)").matches){play=0;btn.textContent="Play"}
+requestAnimationFrame(frame);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{
+  boot();if(pin!==null)sel(pin);
+});
+</script>
+</body>
+</html>
